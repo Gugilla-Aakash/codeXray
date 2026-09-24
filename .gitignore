@@ -1,0 +1,42 @@
+# --- Secrets (NEVER commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+tokens.txt
+session.txt
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+*.whl
+
+# --- Databases / local state ---
+*.db
+*.sqlite3
+.codexray.json
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.~lock.*
+
+# --- Demo recordings (regenerate: node scripts/record_demo.mjs) ---
+docs/assets/*.mp4
+docs/assets/*.webm
