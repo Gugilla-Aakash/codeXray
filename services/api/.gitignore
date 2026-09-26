@@ -1,0 +1,12 @@
+# Secrets & local artifacts — never commit.
+.env
+.env.*
+*.db
+*.sqlite3
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# CodeXRay project credentials (local only)
+.codexray.json
