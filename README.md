@@ -13,6 +13,13 @@ inventing it.
 - **Web** — Next.js dashboard (`apps/web`)
 - **SDKs** — `codexray-sdk` (Python), `@codexray/browser` (JS)
 
+## SaaS licensing
+
+Set `CODEXRAY_LICENSE_KEY` in `services/api/.env` to a comma/newline-separated
+list of valid license keys. `codexray init`, `POST /api/projects`, and
+`POST /api/demo/setup` then require a matching key (`X-License-Key` header;
+the CLI prompts in a box). Unset = open mode, no gating.
+
 ## License
 
 MIT
