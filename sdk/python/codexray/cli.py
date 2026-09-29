@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import importlib
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -27,13 +29,54 @@ def _api(api_url: str, method: str, path: str, key: str = "", body: dict | None 
         return json.loads(res.read().decode() or "{}")
 
 
-def _create_project(api_url: str, name: str) -> dict:
-    """POST /api/projects (open — no license key required)."""
+def _prompt_license_box() -> str:
+    """Draw a box, ask once for the license key (masked). Single attempt."""
+    lines = [
+        "CodeXRay — license required",
+        "Enter the license key issued to your account.",
+    ]
+    width = max(len(s) for s in lines) + 4
+    print("+" + "-" * width + "+")
+    for s in lines:
+        print(f"|  {s.ljust(width - 2)}|")
+    print("+" + "-" * width + "+")
+    try:
+        return getpass.getpass("License key: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return ""
+
+
+def _resolve_license(flag_value: str) -> str | None:
+    """License key for `init`: --license flag, then env, then interactive box.
+
+    Returns the key, or None when the user must exit (empty/non-interactive).
+    """
+    key = (flag_value or "").strip()
+    if not key:
+        key = os.getenv("CODEXRAY_LICENSE_KEY", "").strip()
+    if key:
+        return key
+    if not sys.stdin.isatty():
+        print("no license key — pass --license KEY, set CODEXRAY_LICENSE_KEY, or run interactively")
+        return None
+    key = _prompt_license_box()
+    if not key:
+        print("no license key entered — exiting")
+        return None
+    return key
+
+
+def _create_project(api_url: str, name: str, license_key: str = "") -> dict:
+    """POST /api/projects — requires X-License-Key when the server enables the gate."""
     data = json.dumps({"name": name, "environment": "local"}).encode()
     req = urllib.request.Request(
         f"{api_url.rstrip('/')}/api/projects",
         data=data,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            **({"X-License-Key": license_key} if license_key else {}),
+        },
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=10) as res:
@@ -69,9 +112,15 @@ def cmd_init(args: argparse.Namespace) -> int:
             print(f"{CONFIG_FILE} already exists here")
         print("rerun with --force to replace it (old key keeps working server-side)")
         return 2
+    license_key = _resolve_license(args.license)
+    if not license_key:
+        return 1
     try:
-        proj = _create_project(args.api, args.name)
+        proj = _create_project(args.api, args.name, license_key)
     except urllib.error.HTTPError as exc:
+        if exc.code in (401, 403):
+            print("invalid license key — get one from your CodeXRay account, then retry")
+            return 1
         print(f"cannot reach CodeXRay API at {args.api}: HTTP {exc.code}")
         print("is it running? (services/api → uvicorn on :3101)")
         return 1
@@ -223,6 +272,11 @@ def main(argv: list[str] | None = None) -> int:
     p_init.add_argument("--api", default="http://127.0.0.1:3101")
     p_init.add_argument("--name", default=Path.cwd().name)
     p_init.add_argument("--force", action="store_true", help="replace existing .codexray.json")
+    p_init.add_argument(
+        "--license",
+        default="",
+        help="license key (or set CODEXRAY_LICENSE_KEY); prompts in a box when omitted",
+    )
     p_init.set_defaults(fn=cmd_init)
 
     sub.add_parser("doctor", help="check API + auth").set_defaults(fn=cmd_doctor)
