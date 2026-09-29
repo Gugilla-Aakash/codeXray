@@ -15,12 +15,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 # --- Supabase (fill real values in services/api/.env; placeholders until then).
-# Server names first, Next.js NEXT_PUBLIC_* names as fallback so one copy
-# of each value is enough.
+# Server names first, Next.js NEXT_PUBLIC_* name as fallback for the URL so
+# one copy of that value is enough. Keys are server-side only — no anon/publishable
+# key is read here (the data path is SQLAlchemy with the service role).
 SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL", "")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv(
-    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", ""
-)
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv(
     "SUPABASE_SECRET_KEY", ""
 )
@@ -67,6 +65,21 @@ BYOK_MAX_HISTORY = int(os.getenv("BYOK_MAX_HISTORY", "12"))
 BYOK_TIMEOUT_S = float(os.getenv("BYOK_TIMEOUT_S", "30"))
 BYOK_MAX_TOKENS = int(os.getenv("BYOK_MAX_TOKENS", "800"))
 BYOK_RATE_LIMIT_PER_MIN = int(os.getenv("BYOK_RATE_LIMIT_PER_MIN", "30"))
+
+# --- SaaS license gate. Comma- or newline-separated list of valid license
+# keys; `POST /api/projects` and `POST /api/demo/setup` require a matching
+# X-License-Key header when set. Empty/unset => open mode (no gating), which
+# is the self-hosted / open-source default.
+LICENSE_KEYS = frozenset(
+    k.strip()
+    for k in os.getenv("CODEXRAY_LICENSE_KEY", "").replace("\n", ",").split(",")
+    if k.strip()
+)
+
+# --- Failed-license attempts allowed per client IP per rolling minute.
+# Brute-force protection for the gated endpoints above; only *wrong* keys
+# consume the budget, so legitimate first-try users are never throttled.
+LICENSE_RATE_LIMIT_PER_MIN = int(os.getenv("LICENSE_RATE_LIMIT_PER_MIN", "5"))
 
 # --- One-click demo bootstrap. Creates a seeded demo project so first-time
 # visitors reach the dashboard in one click. Set DEMO_SETUP=0 in production.
