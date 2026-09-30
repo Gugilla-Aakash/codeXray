@@ -12,6 +12,12 @@ codexray logs path/to/logs/          # or a whole directory of *.log/*.jsonl
 # → open the printed dashboard link
 ```
 
+On SaaS servers, `codexray init` prompts for your license key in a box
+(one attempt — wrong key exits without writing `.codexray.json`). For
+non-interactive use pass `--license KEY` or set `CODEXRAY_LICENSE_KEY`.
+Open-source deployments without `CODEXRAY_LICENSE_KEY` configured skip the
+prompt entirely.
+
 Local development (from this repo):
 
 ```bash
