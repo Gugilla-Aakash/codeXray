@@ -123,10 +123,12 @@ def cmd_init(args: argparse.Namespace) -> int:
             return 1
         print(f"cannot reach CodeXRay API at {args.api}: HTTP {exc.code}")
         print("is it running? (services/api → uvicorn on :3101)")
+        print("override the URL with --api URL or CODEXRAY_API=URL")
         return 1
     except Exception as exc:
         print(f"cannot reach CodeXRay API at {args.api}: {exc}")
         print("is it running? (services/api → uvicorn on :3101)")
+        print("override the URL with --api URL or CODEXRAY_API=URL")
         return 1
     # Keep credentials out of git: nearest .gitignore at or above CWD.
     Path(CONFIG_FILE).write_text(
@@ -269,7 +271,11 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p_init = sub.add_parser("init", help="create a CodeXRay project here")
-    p_init.add_argument("--api", default="http://127.0.0.1:3101")
+    p_init.add_argument(
+        "--api",
+        default=os.getenv("CODEXRAY_API") or "http://127.0.0.1:3101",
+        help="API base URL (env: CODEXRAY_API; default http://127.0.0.1:3101)",
+    )
     p_init.add_argument("--name", default=Path.cwd().name)
     p_init.add_argument("--force", action="store_true", help="replace existing .codexray.json")
     p_init.add_argument(
