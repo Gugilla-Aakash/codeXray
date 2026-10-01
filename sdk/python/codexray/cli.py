@@ -67,6 +67,20 @@ def _resolve_license(flag_value: str) -> str | None:
     return key
 
 
+def _license_required(api_url: str) -> bool | None:
+    """Does the server gate project creation behind a license key?
+
+    True/False from GET /api/license; None when the server can't be asked
+    (unreachable, or an older server without the endpoint) — callers then
+    fall back to the normal prompt/flag/env resolution.
+    """
+    try:
+        with urllib.request.urlopen(f"{api_url.rstrip('/')}/api/license", timeout=5) as res:
+            return bool(json.loads(res.read().decode() or "{}").get("required"))
+    except Exception:
+        return None
+
+
 def _create_project(api_url: str, name: str, license_key: str = "") -> dict:
     """POST /api/projects — requires X-License-Key when the server enables the gate."""
     data = json.dumps({"name": name, "environment": "local"}).encode()
@@ -112,9 +126,13 @@ def cmd_init(args: argparse.Namespace) -> int:
             print(f"{CONFIG_FILE} already exists here")
         print("rerun with --force to replace it (old key keeps working server-side)")
         return 2
-    license_key = _resolve_license(args.license)
-    if not license_key:
-        return 1
+    # Open servers (required=false) take any request — no prompt, no header.
+    if _license_required(args.api) is False:
+        license_key = ""
+    else:
+        license_key = _resolve_license(args.license)
+        if not license_key:
+            return 1
     try:
         proj = _create_project(args.api, args.name, license_key)
     except urllib.error.HTTPError as exc:
