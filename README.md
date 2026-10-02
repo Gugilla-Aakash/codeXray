@@ -54,6 +54,10 @@ codexray logs path/to/app.log            # tail a log file → dashboard
 codexray doctor                          # check API reachability + auth
 ```
 
+`init` targets `http://127.0.0.1:3101` by default — point it elsewhere with
+`--api URL` or `CODEXRAY_API=URL`. Servers with licensing disabled
+(`required: false`) skip the license prompt entirely.
+
 ## Stack
 
 - **API** — FastAPI (`services/api`)
