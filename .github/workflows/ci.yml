@@ -7,7 +7,7 @@ on:
 
 jobs:
   api:
-    name: API (import smoke)
+    name: API (tests)
     runs-on: ubuntu-latest
     defaults:
       run: { working-directory: services/api }
@@ -21,6 +21,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Import the app (catches missing modules / config attrs)
         run: python -c "from app.main import app; print(app.title)"
+      - name: Run the test suite
+        run: python -m pytest tests/ -q
 
   sdk-python:
     name: Python SDK (tests)
