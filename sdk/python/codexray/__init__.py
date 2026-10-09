@@ -8,11 +8,11 @@ from .tracer import Span, Tracer, current_span, default_tracer, set_default_trac
 
 __version__ = "0.1.2"
 __all__ = [
-    "Tracer",
-    "Span",
     "CodeXRayMiddleware",
+    "Span",
+    "Tracer",
+    "__version__",
     "current_span",
     "default_tracer",
     "set_default_tracer",
-    "__version__",
 ]
