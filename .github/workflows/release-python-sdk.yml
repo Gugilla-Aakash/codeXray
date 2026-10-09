@@ -1,0 +1,82 @@
+name: Release Python SDK
+
+on:
+  push:
+    tags:
+      - "sdk-python-v*"
+
+jobs:
+  build-test:
+    name: Build + test
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: sdk/python }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test + build deps
+        run: pip install build twine pytest httpx sqlalchemy
+      - name: Run SDK tests
+        run: python -m pytest -q
+      - name: Assert tag matches package version
+        run: |
+          TAG="${GITHUB_REF_NAME#sdk-python-v}"
+          VER=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          echo "tag=$TAG pyproject=$VER"
+          test "$TAG" = "$VER"
+      - name: Assert tag matches __version__
+        run: |
+          TAG="${GITHUB_REF_NAME#sdk-python-v}"
+          VER=$(python -c "from codexray import __version__; print(__version__)")
+          echo "tag=$TAG __version__=$VER"
+          test "$TAG" = "$VER"
+      - name: Build sdist + wheel
+        run: python -m build
+      - name: Twine check
+        run: twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: sdk/python/dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: build-test
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/codexray-sdk
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist/
+          skip-existing: true
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/codexray-sdk
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
