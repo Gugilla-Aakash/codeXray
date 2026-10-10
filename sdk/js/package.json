@@ -1,0 +1,11 @@
+{
+  "name": "@codexray/browser",
+  "version": "0.1.0",
+  "description": "CodeXRay browser telemetry — clicks to backend in one trace",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "license": "MIT"
+}
