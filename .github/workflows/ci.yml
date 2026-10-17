@@ -53,5 +53,7 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      # webpack, not the default Turbopack: its Google-font replacer assumes a
+      # single next/font/google query and fails on our three-font layout.
       - name: Build the dashboard (catches broken imports and type errors)
-        run: npm run build
+        run: npx next build --webpack
