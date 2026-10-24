@@ -40,3 +40,6 @@ Thumbs.db
 # --- Demo recordings (regenerate: node scripts/record_demo.mjs) ---
 docs/assets/*.mp4
 docs/assets/*.webm
+
+# --- Tool caches ---
+.ruff_cache/
