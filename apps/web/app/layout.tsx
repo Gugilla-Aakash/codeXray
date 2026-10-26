@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Sora } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const display = Sora({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+/* Variable fonts are vendored in app/fonts (see LICENSES.md) so builds are
+   offline-safe: no next/font/google fetch, no Turbopack font-replacer bug. */
+
+const display = localFont({
+  src: "./fonts/sora.woff2",
+  weight: "100 800",
   variable: "--font-display",
+  display: "swap",
 });
 
-const body = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const body = localFont({
+  src: "./fonts/inter.woff2",
+  weight: "100 900",
   variable: "--font-body",
+  display: "swap",
 });
 
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+const mono = localFont({
+  src: "./fonts/jetbrains-mono.woff2",
+  weight: "100 800",
   variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
