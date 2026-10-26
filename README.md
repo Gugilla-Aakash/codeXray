@@ -100,12 +100,11 @@ cd sdk/python && pip install -e . pytest httpx sqlalchemy && python -m pytest te
 cd sdk/js && node test/run.mjs
 
 # Web (Next.js)
-cd apps/web && npm ci && npm run lint && npx next build --webpack
+cd apps/web && npm ci && npm run lint && npm run build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all three jobs on every push. The web job
-builds with webpack: on Next 16.3.5 the default Turbopack build fails to resolve
-the three `next/font/google` queries in `apps/web/app/layout.tsx`.
+CI (`.github/workflows/ci.yml`) runs all three jobs on every push. Fonts are
+self-hosted from `apps/web/app/fonts` (SIL OFL), so builds make no network calls.
 
 ## Repository layout
 
