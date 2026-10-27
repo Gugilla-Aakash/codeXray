@@ -13,8 +13,8 @@ import re
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Callable, Iterator
 
 _LEVEL_RE = re.compile(
     r"\b(DEBUG|INFO|WARN(?:ING)?|ERROR|FATAL|CRITICAL)\b", re.IGNORECASE
