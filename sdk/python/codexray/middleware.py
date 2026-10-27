@@ -6,7 +6,8 @@ one trace per HTTP request, error capture, health/docs noise excluded.
 
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable, MutableMapping
+from collections.abc import Awaitable, Callable, MutableMapping
+from typing import Any
 
 from . import naming, patch
 from .tracer import Tracer, set_default_tracer
