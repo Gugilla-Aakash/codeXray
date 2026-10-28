@@ -9,8 +9,9 @@ import threading
 import time
 import urllib.request
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any
 
 
 def _new_id(n: int = 12) -> str:
@@ -20,15 +21,15 @@ def _new_id(n: int = 12) -> str:
 # Process-wide default tracer for auto-instrumented libraries that have no
 # handle to the app's tracer (httpx/urllib/sqlite hooks). Set by the
 # middleware / `serve`; unset means "no tracing backend" (hooks stay silent).
-_default_tracer: "Tracer | None" = None
+_default_tracer: Tracer | None = None
 
 
-def set_default_tracer(tracer: "Tracer | None") -> None:
+def set_default_tracer(tracer: Tracer | None) -> None:
     global _default_tracer
     _default_tracer = tracer
 
 
-def default_tracer() -> "Tracer | None":
+def default_tracer() -> Tracer | None:
     return _default_tracer
 
 
@@ -45,18 +46,18 @@ class sending:
     def __enter__(self) -> None:
         _send_state.active = True
 
-    def __exit__(self, *exc: Any) -> None:
+    def __exit__(self, *exc: object) -> None:
         _send_state.active = False
 
 
 # Request-scoped parent: middleware sets the root span here so nested
 # `tracer.span()` calls anywhere in the call tree attach automatically.
-_current_span: contextvars.ContextVar["Span | None"] = contextvars.ContextVar(
+_current_span: contextvars.ContextVar[Span | None] = contextvars.ContextVar(
     "codexray_span", default=None
 )
 
 
-def current_span() -> "Span | None":
+def current_span() -> Span | None:
     """The ambient parent span for this request/task, if any."""
     return _current_span.get()
 
@@ -119,9 +120,8 @@ class Tracer:
                 },
                 method="POST",
             )
-            with sending():
-                with self._opener.open(req, timeout=self.timeout):
-                    pass
+            with sending(), self._opener.open(req, timeout=self.timeout):
+                pass
         except Exception:
             pass  # telemetry must never break the app
 
@@ -151,7 +151,7 @@ class Tracer:
         self._stop.set()
         self._worker.join(timeout=timeout)
 
-    def start_trace(self, operation: str, service: str | None = None) -> "Span":
+    def start_trace(self, operation: str, service: str | None = None) -> Span:
         return Span(
             self,
             trace_id=_new_id(),
@@ -165,10 +165,10 @@ class Tracer:
         self,
         operation: str,
         service: str | None = None,
-        parent: "Span | None" = None,
+        parent: Span | None = None,
         metadata: dict[str, Any] | None = None,
         as_current: bool = False,
-    ) -> Iterator["Span"]:
+    ) -> Iterator[Span]:
         """Child span; inherits the ambient request span unless a parent is
         given. With as_current=True the new span becomes ambient itself.
         """
